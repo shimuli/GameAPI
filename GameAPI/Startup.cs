@@ -1,3 +1,5 @@
+using GameAPI.Repository.IRepo;
+using GameAPI.Repository.Repo;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -32,6 +34,8 @@ namespace GameAPI
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "GameAPI", Version = "v1" });
             });
+
+            services.AddScoped<ICharacterRepo, CharacterRepo>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
