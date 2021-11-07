@@ -1,4 +1,6 @@
-﻿using GameAPI.Model;
+﻿using GameAPI.DTO.Characters;
+using GameAPI.Helpers;
+using GameAPI.Model;
 using GameAPI.Repository.IRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,26 +23,48 @@ namespace GameAPI.Controllers
 
 
         [HttpGet]
-        public  ActionResult<List<Character>> GetALl()
+        public  async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>>  GetALl()
         {
-            return Ok(_characterRepo.GetAllCharacters());
+            return Ok(await _characterRepo.GetAllCharacters());
         }
 
         [HttpGet("{id}")]
-        public  ActionResult<Character> GetOne(int id)
+        public async Task<ActionResult<ServiceResponse<GetCharacterDto>>> GetOne(int id)
         {
             var charcter = _characterRepo.GetOneCharacter(id);
             if(charcter == null)
             {
-                return NotFound("Charcter not found");
+                return NotFound(charcter);
             }
-            return Ok(charcter);
+            return Ok( await charcter);
         }
 
         [HttpPost]
-        public ActionResult<List<Character>> AddCharacter([FromForm] Character newcharacter)
+        public async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>> AddCharacter([FromForm] CreateCharactorDto newcharacter)
         {
-            return Ok(_characterRepo.AddCharacter(newcharacter));
+            return Ok(await _characterRepo.AddCharacter(newcharacter));
+        }
+
+        [HttpPut]
+        public async Task<ActionResult<ServiceResponse<GetCharacterDto>>> UpdateCharacter([FromForm] UpdateCharactorDto updateDto)
+        {
+            var charactor = await _characterRepo.UpdateCharactor(updateDto);
+            if(charactor.Data == null)
+            {
+                return NotFound(charactor);
+            }
+            return Ok(charactor);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>> Delete(int id)
+        {
+            var charactor = await _characterRepo.Delete(id);
+            if (charactor.Data == null)
+            {
+                return NotFound(charactor);
+            }
+            return Ok(charactor);
         }
     }
 }

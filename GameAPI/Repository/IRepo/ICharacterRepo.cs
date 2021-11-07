@@ -1,4 +1,6 @@
-﻿using GameAPI.Model;
+﻿using GameAPI.DTO.Characters;
+using GameAPI.Helpers;
+using GameAPI.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +10,14 @@ namespace GameAPI.Repository.IRepo
 {
     public interface ICharacterRepo
     {
-        List<Character> GetAllCharacters();
-        Character GetOneCharacter(int id);
+        Task<ServiceResponse<List<GetCharacterDto>>> GetAllCharacters();
+        Task<ServiceResponse<GetCharacterDto>> GetOneCharacter(int id);
 
-        List<Character> AddCharacter(Character newCharacter);
+        Task<ServiceResponse<List<GetCharacterDto>>> AddCharacter(CreateCharactorDto newCharacter);
+
+        Task<ServiceResponse<GetCharacterDto>> UpdateCharactor(UpdateCharactorDto updateCharactorDto);
+
+
+        Task<ServiceResponse<List<GetCharacterDto>>> Delete(int Id);
     }
 }
