@@ -1,6 +1,7 @@
 using GameAPI.Data;
 using GameAPI.Repository.IRepo;
 using GameAPI.Repository.Repo;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -10,10 +11,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace GameAPI
@@ -34,16 +37,74 @@ namespace GameAPI
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "GameAPI", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { 
+                    Title = "GameAPI", 
+                    Version = "v1",
+
+                    Description = "Games API",
+                    Contact = new OpenApiContact()
+                    {
+                        Email = "shimulicedric@gmail.com",
+                        Name = "Cedric Shimuli",
+                        Url = new Uri("https://github.com/shimuli/GameAPI")
+                    },
+                    License = new Microsoft.OpenApi.Models.OpenApiLicense()
+                    {
+                        Url = new Uri("https://en.wikipedia.org/wiki/MIT_License")
+                    }
+                });
+
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 1safsfsdfdfd\"",
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[]{}
+                    }
+
+                });
             });
 
 
             services.AddScoped<ICharacterRepo, CharacterRepo>();
+            services.AddScoped<IAuthRepo, AuthRepo>();
             services.AddAutoMapper(typeof(Startup));
 
             services.AddDbContext<DataContext>(option=>
             option.UseSqlServer(Configuration.GetConnectionString("DevConnectionString"))
                 );
+
+            // jwt
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+               .AddJwtBearer(options =>
+               {
+                   options.TokenValidationParameters = new TokenValidationParameters
+                   {
+                       ValidateIssuer = false,
+                       ValidateAudience = false,
+                       ValidateLifetime = true,
+                       ValidateIssuerSigningKey = true,
+                       //ValidIssuer = Configuration["AppSetting:Issuer"],
+                       //ValidAudience = Configuration["AppSetting:Issuer"],
+                       IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("AppSetting:Token").Value)),
+                       ClockSkew = TimeSpan.Zero,
+                   };
+               });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -57,8 +118,8 @@ namespace GameAPI
             }
 
             app.UseHttpsRedirection();
-
             app.UseRouting();
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

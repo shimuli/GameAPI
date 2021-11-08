@@ -2,6 +2,7 @@
 using GameAPI.Helpers;
 using GameAPI.Model;
 using GameAPI.Repository.IRepo;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace GameAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]/[action]")]
     [ApiController]
     public class CharacterController : ControllerBase
@@ -22,14 +24,15 @@ namespace GameAPI.Controllers
         }
 
 
+        [AllowAnonymous]
         [HttpGet]
-        public  async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>>  GetALl()
+        public  async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>>  Characters()
         {
             return Ok(await _characterRepo.GetAllCharacters());
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ServiceResponse<GetCharacterDto>>> GetOne(int id)
+        public async Task<ActionResult<ServiceResponse<GetCharacterDto>>> Character(int id)
         {
             var charcter = _characterRepo.GetOneCharacter(id);
             if(charcter == null)

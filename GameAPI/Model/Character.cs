@@ -23,5 +23,8 @@ namespace GameAPI.Model
         public DateTime? DateUpdated { get; set; }
 
         public RpgClass Class { get; set; } = RpgClass.Mage;
+
+        // one to many-  one user can have many characters
+        public User User { get; set; }
     }
 }

@@ -76,7 +76,7 @@ namespace GameAPI.Repository.Repo
           
             try
             {
-                Character updateCharacter = _db.Characters.FirstOrDefault(c => c.Id == updateCharactorDto.Id);
+                var updateCharacter = _db.Characters.FirstOrDefault(c => c.Id == updateCharactorDto.Id);
                 if(updateCharacter != null)
                 {
                     updateCharacter.Name = updateCharactorDto.Name;
