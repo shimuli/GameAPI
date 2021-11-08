@@ -1,9 +1,11 @@
+using GameAPI.Data;
 using GameAPI.Repository.IRepo;
 using GameAPI.Repository.Repo;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -35,8 +37,13 @@ namespace GameAPI
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "GameAPI", Version = "v1" });
             });
 
+
             services.AddScoped<ICharacterRepo, CharacterRepo>();
             services.AddAutoMapper(typeof(Startup));
+
+            services.AddDbContext<DataContext>(option=>
+            option.UseSqlServer(Configuration.GetConnectionString("DevConnectionString"))
+                );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

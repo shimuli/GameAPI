@@ -20,5 +20,9 @@ namespace GameAPI.DTO.Characters
         public int Intelligence { get; set; } = 10;
 
         public RpgClass Class { get; set; } = RpgClass.Mage;
+
+        public DateTime? DateCreated { get; set; }
+
+        public DateTime? DateUpdated { get; set; }
     }
 }

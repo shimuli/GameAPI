@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using GameAPI.Data;
 using GameAPI.DTO.Characters;
 using GameAPI.Helpers;
 using GameAPI.Model;
 using GameAPI.Repository.IRepo;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,25 +15,29 @@ namespace GameAPI.Repository.Repo
     public class CharacterRepo : ICharacterRepo
     {
 
-        private static List<Character> characters = new List<Character>
-        {
-            new Character(),
-            new Character{Id= 1,Name = "Jojo"}
-        };
+        //private static List<Character> characters = new List<Character>
+        //{
+        //    new Character(),
+        //    new Character{Id= 1,Name = "Jojo"}
+        //};
         private readonly IMapper _mapper;
+        private readonly DataContext _db;
 
-        public CharacterRepo(IMapper mapper)
+        public CharacterRepo(IMapper mapper, DataContext db)
         {
             _mapper = mapper;
+            _db = db;
         }
 
         public async Task<ServiceResponse<List<GetCharacterDto>>> AddCharacter(CreateCharactorDto newCharacter)
         {
             var serviceResponse = new ServiceResponse<List<GetCharacterDto>>();
             var newchar = _mapper.Map<Character>(newCharacter);
-            newchar.Id = characters.Max(c => c.Id) + 1;
-            characters.Add(newchar);
-            serviceResponse.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
+            newchar.DateCreated = DateTime.Now;
+            newchar.DateUpdated = DateTime.Now;
+            await _db.Characters.AddAsync(newchar);
+            await _db.SaveChangesAsync();
+            serviceResponse.Data = _db.Characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
             return serviceResponse;
         }
 
@@ -39,16 +45,28 @@ namespace GameAPI.Repository.Repo
 
         public async Task<ServiceResponse <List<GetCharacterDto>>> GetAllCharacters()
         {
-            var serviceResponse = new ServiceResponse<List<GetCharacterDto>>();
-            serviceResponse.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
+            var serviceResponse = new ServiceResponse<List<GetCharacterDto>>
+            {
+                Data = await _db.Characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToListAsync()
+            };
             return serviceResponse;
         }
 
         public async Task<ServiceResponse<GetCharacterDto>>  GetOneCharacter(int id)
         {
-            var charcter = characters.FirstOrDefault(c => c.Id == id);
+            var charcter =await _db.Characters.FirstOrDefaultAsync(c => c.Id == id);
             var serviceResponse = new ServiceResponse<GetCharacterDto>();
-            serviceResponse.Data = _mapper.Map<GetCharacterDto>(charcter);
+            if (charcter != null)
+            {
+               
+                serviceResponse.Data = _mapper.Map<GetCharacterDto>(charcter);
+            }
+            else
+            {
+                serviceResponse.Message = "Item not found";
+                serviceResponse.Success = false;
+            }
+            
             return serviceResponse;
         }
 
@@ -58,7 +76,7 @@ namespace GameAPI.Repository.Repo
           
             try
             {
-                Character updateCharacter = characters.FirstOrDefault(c => c.Id == updateCharactorDto.Id);
+                Character updateCharacter = _db.Characters.FirstOrDefault(c => c.Id == updateCharactorDto.Id);
                 if(updateCharacter != null)
                 {
                     updateCharacter.Name = updateCharactorDto.Name;
@@ -67,6 +85,8 @@ namespace GameAPI.Repository.Repo
                     updateCharacter.Strength = updateCharactorDto.Strength;
                     updateCharacter.Defence = updateCharactorDto.Defence;
                     updateCharacter.Class = updateCharactorDto.Class;
+                    updateCharacter.DateUpdated = DateTime.Now;
+                    await _db.SaveChangesAsync();
                     serviceRespones.Data = _mapper.Map<GetCharacterDto>(updateCharacter);
                 }
                 else
@@ -92,11 +112,12 @@ namespace GameAPI.Repository.Repo
 
             try
             {
-                Character removeCharacter = characters.First(c=>c.Id == id);
+                Character removeCharacter = _db.Characters.First(c=>c.Id == id);
                 if (removeCharacter != null)
                 {
-                    characters.Remove(removeCharacter);
-                    serviceRespones.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
+                    _db.Characters.Remove(removeCharacter);
+                    await _db.SaveChangesAsync();
+                    serviceRespones.Data = _db.Characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
                 }
                 else
                 {
@@ -109,7 +130,8 @@ namespace GameAPI.Repository.Repo
             catch (Exception ex)
             {
                 serviceRespones.Success = false;
-                serviceRespones.Message = ex.Message;
+                serviceRespones.Message = "Item not found";
+                Console.WriteLine(ex.Message);
             }
 
             return serviceRespones;

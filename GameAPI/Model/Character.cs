@@ -18,6 +18,10 @@ namespace GameAPI.Model
 
         public int Intelligence { get; set; } = 10;
 
+        public DateTime? DateCreated { get; set; }
+
+        public DateTime? DateUpdated { get; set; }
+
         public RpgClass Class { get; set; } = RpgClass.Mage;
     }
 }
